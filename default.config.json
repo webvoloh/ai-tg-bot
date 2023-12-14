@@ -1,0 +1,7 @@
+{
+  "openai_token": "",
+  "telegram_token": "",
+  "bot_personalize": "You play the role of an assistant programmer named Max",
+  "clear_context_message": "I forgot everything",
+  "error_message": "An error occurred. Please try again later."
+}
