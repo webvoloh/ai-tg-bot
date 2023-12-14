@@ -2,6 +2,9 @@
   "openai_token": "",
   "telegram_token": "",
   "bot_personalize": "You play the role of an assistant programmer named Max",
+  "welcome_message": "Hello!",
   "clear_context_message": "I forgot everything",
-  "error_message": "An error occurred. Please try again later."
+  "error_message": "An error occurred. Please try again later.",
+  "forbidden_message": "You are not allowed to use the bot.",
+  "allowed_users": []
 }

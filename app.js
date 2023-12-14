@@ -17,7 +17,18 @@ const lastMessages = new Map();
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const userMessage = msg.text;
+  const userName = msg.from.username;
   try {
+    if(config.allowed_users.length && !config.allowed_users.includes(userName)){
+      await bot.sendMessage(chatId, config.forbidden_message);
+      return;
+    }
+    // Check if the message is '/start'
+    if (userMessage === '/start') {
+      // Send a welcome message
+      await bot.sendMessage(chatId, config.welcome_message);
+      return;
+    }
     // If the message is '/reset', it clears the chat history and sends a message to the user
     if (userMessage === '/reset') {
       lastMessages.set(chatId, []);
@@ -39,6 +50,7 @@ bot.on('message', async (msg) => {
     }
 
     // Sends a typing action to the user to indicate that the bot is working on a response
+    await bot.sendChatAction(chatId, 'typing');
     const typing = setInterval(() => {
       bot.sendChatAction(chatId, 'typing');
     }, 5000)
