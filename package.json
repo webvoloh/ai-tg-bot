@@ -1,0 +1,19 @@
+{
+  "name": "openai-chat",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.64.0",
+    "openai": "^4.21.0"
+  }
+}
