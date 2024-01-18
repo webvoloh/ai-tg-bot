@@ -6,7 +6,7 @@ import config from "./config.json" assert {type: 'json'};
 // Setting up the Telegram bot using the token from the config file
 const token = config.telegram_token;
 const bot = new TelegramBot(token, {polling: true});
-
+const isBotBusy = new Map();
 // Initializing the OpenAI API with the token from the config file
 const openai = new OpenAI({apiKey: config.openai_token});
 
@@ -18,6 +18,12 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const userMessage = msg.text;
   const userName = msg.from.username;
+
+  if (isBotBusy.get(chatId)) {
+    await bot.sendMessage(chatId, config.is_bot_busy_message);
+    return;
+  }
+
   try {
     if(config.allowed_users.length && !config.allowed_users.includes(userName)){
       await bot.sendMessage(chatId, config.forbidden_message);
@@ -55,6 +61,7 @@ bot.on('message', async (msg) => {
       bot.sendChatAction(chatId, 'typing');
     }, 5000)
 
+    isBotBusy.set(chatId, true);
     // Sends a request to the OpenAI API to generate a response based on the chat history
     const completion = await openai.chat.completions.create({
       messages: [
@@ -74,9 +81,11 @@ bot.on('message', async (msg) => {
       await bot.sendMessage(chatId, messagePart, {parse_mode: 'Markdown', split_length: maxMessageLength});
     }
     clearInterval(typing)
+    isBotBusy.set(chatId, false);
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
     // You can also send an error message to the user here
     await bot.sendMessage(chatId, config.error_message);
+    isBotBusy.set(chatId, false);
   }
 });
