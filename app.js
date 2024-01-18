@@ -78,6 +78,8 @@ bot.on('message', async (msg) => {
     const maxMessageLength = 4096;
     for (let i = 0; i < botResponse.length; i += maxMessageLength) {
       const messagePart = botResponse.slice(i, i + maxMessageLength);
+      // Adds the bot's message to the chat history
+      lastMessages.get(chatId).push({ role: "assistant", content: messagePart });
       await bot.sendMessage(chatId, messagePart, {parse_mode: 'Markdown', split_length: maxMessageLength});
     }
     clearInterval(typing)
