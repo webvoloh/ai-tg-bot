@@ -8,7 +8,10 @@ const token = config.telegram_token;
 const bot = new TelegramBot(token, {polling: true});
 const isBotBusy = new Map();
 // Initializing the OpenAI API with the token from the config file
-const openai = new OpenAI({apiKey: config.openai_token});
+const openai = new OpenAI({
+  apiKey: config.openai_token,
+  baseURL: config.baseURL || `https://api.openai.com/v1`
+});
 
 // Creating a new Map to store the last messages for each chat
 const lastMessages = new Map();
@@ -68,7 +71,7 @@ bot.on('message', async (msg) => {
         {role: "system", content: config.bot_personalize},
         ...lastMessages.get(chatId),
       ],
-      model: "gpt-3.5-turbo",
+      model: config.model,
     });
 
     // Extracts the bot's response from the OpenAI API response
