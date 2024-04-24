@@ -27,6 +27,7 @@ bot.on('message', async (msg) => {
     return;
   }
 
+  let typing;
   try {
     if(config.allowed_users.length && !config.allowed_users.includes(userName)){
       await bot.sendMessage(chatId, config.forbidden_message);
@@ -60,7 +61,7 @@ bot.on('message', async (msg) => {
 
     // Sends a typing action to the user to indicate that the bot is working on a response
     await bot.sendChatAction(chatId, 'typing');
-    const typing = setInterval(() => {
+    typing = setInterval(() => {
       bot.sendChatAction(chatId, 'typing');
     }, 5000)
 
@@ -85,12 +86,13 @@ bot.on('message', async (msg) => {
       lastMessages.get(chatId).push({ role: "assistant", content: messagePart });
       await bot.sendMessage(chatId, messagePart, {parse_mode: 'Markdown', split_length: maxMessageLength});
     }
-    clearInterval(typing)
+    clearInterval(typing);
     isBotBusy.set(chatId, false);
   } catch (error) {
     console.error(`An error occurred: ${error.message}`);
     // You can also send an error message to the user here
     await bot.sendMessage(chatId, config.error_message);
     isBotBusy.set(chatId, false);
+    clearInterval(typing)
   }
 });
