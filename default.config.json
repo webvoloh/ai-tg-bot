@@ -8,6 +8,7 @@
   "clear_context_message": "I forgot everything",
   "error_message": "An error occurred. Please try again later.",
   "forbidden_message": "You are not allowed to use the bot.",
+  "unsupported_message_type": "Sorry, sending stickers is not supported by this bot. Please send a text message.",
   "is_bot_busy_message": "Bot is busy",
   "allowed_users": []
 }

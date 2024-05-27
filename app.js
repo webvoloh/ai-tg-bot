@@ -22,6 +22,18 @@ bot.on('message', async (msg) => {
   const userMessage = msg.text;
   const userName = msg.from.username;
 
+  if (msg.document || msg.photo || msg.sticker || msg.video || msg.audio || msg.voice) {
+    // If the message contains unsupported content, send a message about unsupported message types
+    await bot.sendMessage(chatId, config.unsupported_message_type);
+    return;
+  }
+
+  if (!userMessage) {
+    // If the message doesn't contain text, ignore it
+    await bot.sendMessage(chatId, config.unsupported_message_type);
+    return;
+  }
+
   if (isBotBusy.get(chatId)) {
     await bot.sendMessage(chatId, config.is_bot_busy_message);
     return;
