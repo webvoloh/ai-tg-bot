@@ -16,6 +16,50 @@ const openai = new OpenAI({
 // Creating a new Map to store the last messages for each chat
 const lastMessages = new Map();
 
+function splitMessage(message, maxLength) {
+  const chunks = [];
+  let remainingMessage = message;
+
+  while (remainingMessage.length > 0) {
+    let chunk;
+
+    if (remainingMessage.length <= maxLength) {
+      chunk = remainingMessage;
+      remainingMessage = '';
+    } else {
+      let splitIndex = maxLength;
+
+      // Ищем ближайший перенос строки или тег внутри текущей части
+      const newlineIndex = remainingMessage.lastIndexOf('\n', maxLength);
+      const codeBlockIndex = remainingMessage.lastIndexOf('```', maxLength);
+
+      // Выбираем наибольший индекс, чтобы не разрывать теги или переносы строк
+      splitIndex = Math.max(splitIndex, newlineIndex, codeBlockIndex);
+
+      chunk = remainingMessage.slice(0, splitIndex + 1);
+      remainingMessage = remainingMessage.slice(splitIndex + 1);
+    }
+
+    chunks.push(chunk);
+  }
+
+  // Проверяем и корректируем теги Markdown после разбиения на части
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+
+    const codeBlockCount = (chunk.match(/```/g) || []).length;
+
+    if (codeBlockCount % 2 !== 0) {
+      chunks[i] += '```';
+      if (i < chunks.length - 1) {
+        chunks[i + 1] = '```' + chunks[i + 1];
+      }
+    }
+  }
+
+  return chunks;
+}
+
 // Setting up a listener for incoming messages
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -90,37 +134,15 @@ bot.on('message', async (msg) => {
     // Extracts the bot's response from the OpenAI API response
     const botResponse = completion.choices[0].message.content;
 
-    // Sends the bot's response to the user
-    const maxMessageLength = 4096;
-    let remainingResponse = botResponse;
+    // Разбиваем ответ бота на части с помощью функции splitMessage
+    const messageParts = splitMessage(botResponse, 4096);
 
-    while (remainingResponse.length > 0) {
-      let messagePart;
-
-      if (remainingResponse.length <= maxMessageLength) {
-        messagePart = remainingResponse;
-        remainingResponse = '';
-      } else {
-        let splitIndex = remainingResponse.lastIndexOf('\n', maxMessageLength);
-
-        if (splitIndex === -1) {
-          splitIndex = maxMessageLength;
-        }
-
-        messagePart = remainingResponse.slice(0, splitIndex);
-        remainingResponse = remainingResponse.slice(splitIndex);
-      }
-
-      lastMessages.get(chatId).push({ role: "assistant", content: messagePart });
-
-      if (botResponse.length <= maxMessageLength) {
-        // If the entire response fits in one message, send it with Markdown formatting
-        await bot.sendMessage(chatId, messagePart, {parse_mode: 'Markdown'});
-      } else {
-        // If the response is split into multiple messages, send them without formatting
-        await bot.sendMessage(chatId, messagePart, {parse_mode: 'None'});
-      }
+    // Отправляем каждую часть ответа бота с форматированием Markdown
+    for (const part of messageParts) {
+      lastMessages.get(chatId).push({ role: "assistant", content: part });
+      await bot.sendMessage(chatId, part, {parse_mode: 'Markdown'});
     }
+
     clearInterval(typing);
     isBotBusy.set(chatId, false);
   } catch (error) {
