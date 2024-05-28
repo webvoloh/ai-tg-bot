@@ -90,13 +90,36 @@ bot.on('message', async (msg) => {
     // Extracts the bot's response from the OpenAI API response
     const botResponse = completion.choices[0].message.content;
 
-    // Sends the bot's response to the user, with the message parsed as Markdown
+    // Sends the bot's response to the user
     const maxMessageLength = 4096;
-    for (let i = 0; i < botResponse.length; i += maxMessageLength) {
-      const messagePart = botResponse.slice(i, i + maxMessageLength);
-      // Adds the bot's message to the chat history
+    let remainingResponse = botResponse;
+
+    while (remainingResponse.length > 0) {
+      let messagePart;
+
+      if (remainingResponse.length <= maxMessageLength) {
+        messagePart = remainingResponse;
+        remainingResponse = '';
+      } else {
+        let splitIndex = remainingResponse.lastIndexOf('\n', maxMessageLength);
+
+        if (splitIndex === -1) {
+          splitIndex = maxMessageLength;
+        }
+
+        messagePart = remainingResponse.slice(0, splitIndex);
+        remainingResponse = remainingResponse.slice(splitIndex);
+      }
+
       lastMessages.get(chatId).push({ role: "assistant", content: messagePart });
-      await bot.sendMessage(chatId, messagePart, {parse_mode: 'Markdown', split_length: maxMessageLength});
+
+      if (botResponse.length <= maxMessageLength) {
+        // If the entire response fits in one message, send it with Markdown formatting
+        await bot.sendMessage(chatId, messagePart, {parse_mode: 'Markdown'});
+      } else {
+        // If the response is split into multiple messages, send them without formatting
+        await bot.sendMessage(chatId, messagePart, {parse_mode: 'None'});
+      }
     }
     clearInterval(typing);
     isBotBusy.set(chatId, false);
